@@ -5,10 +5,12 @@ import resourcesToBlock from './utils/resourcesToBlock.js'
 import removeScriptTags from './utils/removeScriptTags.js'
 import removePreloads from './utils/removePreloads.js'
 
-const { PORT = 8000 } = process.env
-const PRERENDER_USER_AGENT = 'Prerender'
+const { PORT = 8000, PRERENDER_USER_AGENT = 'Prerender', MAX_OPEN_TABS = 10 } = process.env
 
 const browser = await puppeteer.launch({ headless: 'new' })
+
+let emptyTab = await browser.newPage()
+let numOfOpenTabs = 1
 
 console.log('Started Headless Chrome')
 
@@ -20,11 +22,26 @@ const server = http.createServer(async (req, res) => {
       .map(param => param.split('='))
   )
 
-  const page = await browser.newPage()
+  console.log(`Requesting ${url}`)
+
+  if (numOfOpenTabs === MAX_OPEN_TABS) {
+    console.log(`Too many requests!\n`)
+
+    res.writeHead(429)
+    return res.end()
+  }
+
+  let page
+
+  if (emptyTab) {
+    page = emptyTab
+    emptyTab = null
+  } else {
+    page = await browser.newPage()
+    numOfOpenTabs++
+  }
 
   try {
-    console.log(`Requesting ${url}`)
-
     await page.setUserAgent(PRERENDER_USER_AGENT)
     await page.setViewport({ width: Number(width), height: 768 })
     await page.setRequestInterception(true)
@@ -57,6 +74,12 @@ const server = http.createServer(async (req, res) => {
   }
 
   page.close()
+  numOfOpenTabs--
+
+  if (!emptyTab) {
+    emptyTab = await browser.newPage()
+    numOfOpenTabs++
+  }
 })
 
 server.listen(PORT, () => console.log(`Server is running on port ${PORT}\n`))
