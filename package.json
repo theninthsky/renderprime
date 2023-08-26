@@ -8,6 +8,9 @@
   "author": "Almog Gabay",
   "license": "MIT",
   "repository": "https://github.com/theninthsky/renderprime",
+  "engines": {
+    "node": ">=16.3.0"
+  },
   "type": "module",
   "main": "index.js",
   "scripts": {
