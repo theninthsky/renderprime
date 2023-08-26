@@ -15,6 +15,11 @@ let numOfOpenTabs = 1
 console.log('Started Headless Chrome')
 
 const server = http.createServer(async (req, res) => {
+  if (!req.url.includes('?url=')) {
+    res.writeHead(400)
+    return res.end()
+  }
+
   const { url, width = 1440 } = Object.fromEntries(
     decodeURIComponent(req.url)
       .split('?')[1]
