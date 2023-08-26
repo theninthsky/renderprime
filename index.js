@@ -16,7 +16,7 @@ console.log('Started Headless Chrome')
 
 const server = http.createServer(async (req, res) => {
   const { url, width = 1440 } = Object.fromEntries(
-    req.url
+    decodeURIComponent(req.url)
       .split('?')[1]
       .split('&')
       .map(param => param.split('='))
