@@ -9,13 +9,12 @@ const {
   PORT = 8000,
   PRERENDER_USER_AGENT = 'Prerender',
   WAIT_AFTER_LAST_REQUEST = 200,
-  MAX_OPEN_TABS = 20
+  MAX_OPEN_TABS = 10
 } = process.env
 
 const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] })
 
-let emptyTab = await browser.newPage()
-let numOfOpenTabs = 1
+let numOfOpenTabs = 0
 
 console.log(`Started ${await browser.version()}`)
 
@@ -41,15 +40,8 @@ const server = http.createServer(async (req, res) => {
     return res.end()
   }
 
-  let page
-
-  if (emptyTab) {
-    page = emptyTab
-    emptyTab = null
-  } else {
-    page = await browser.newPage()
-    numOfOpenTabs++
-  }
+  const page = await browser.newPage()
+  numOfOpenTabs++
 
   try {
     await page.setUserAgent(PRERENDER_USER_AGENT)
@@ -86,11 +78,6 @@ const server = http.createServer(async (req, res) => {
 
   await page.close()
   numOfOpenTabs--
-
-  if (!emptyTab) {
-    emptyTab = await browser.newPage()
-    numOfOpenTabs++
-  }
 
   console.log(`Open tabs: ${numOfOpenTabs}\n`)
 })
