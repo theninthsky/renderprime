@@ -1,6 +1,4 @@
 import http from 'node:http'
-import { Readable } from 'node:stream'
-import { createGzip } from 'node:zlib'
 import puppeteer from 'puppeteer'
 
 import resourcesToBlock from './utils/resourcesToBlock.js'
@@ -67,12 +65,8 @@ const server = http.createServer(async (req, res) => {
     html = removeScriptTags(html)
     html = removePreloads(html)
 
-    res.writeHead(200, {
-      'Content-Type': 'text/html; charset=utf-8',
-      'Content-Encoding': 'gzip'
-    })
-
-    Readable.from(html).pipe(createGzip()).pipe(res)
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+    res.end(html)
 
     console.log(`Request sent for ${url}\n`)
   } catch (err) {
