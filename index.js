@@ -62,13 +62,19 @@ const server = http.createServer(async (req, res) => {
         return interceptedRequest.abort()
       }
 
-      console.log(`Unintercepted url: ${interceptedRequest.url()}`)
-
       interceptedRequest.continue()
     })
 
     await page.goto(url)
     await page.waitForNetworkIdle({ idleTime: WAIT_AFTER_LAST_REQUEST })
+
+    console.log(
+      await page.evaluate(() =>
+        JSON.stringify(
+          window.performance.getEntries().filter(({ name }) => name === 'https://pokeapi.co/api/v2/pokemon?limit=10000')
+        )
+      )
+    )
 
     let html = await page.evaluate(() => document.documentElement.outerHTML)
 
@@ -86,7 +92,7 @@ const server = http.createServer(async (req, res) => {
     res.end()
   }
 
-  page.close()
+  await page.close()
   numOfOpenTabs--
 
   if (!emptyTab) {
@@ -94,7 +100,7 @@ const server = http.createServer(async (req, res) => {
     numOfOpenTabs++
   }
 
-  console.log(`There are ${numOfOpenTabs} open tabs\n`)
+  console.log(`Open tabs: ${numOfOpenTabs}\n`)
 })
 
 server.listen(PORT, () => console.log(`Server is running on port ${PORT}\n`))
