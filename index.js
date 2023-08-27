@@ -57,7 +57,7 @@ const server = http.createServer(async (req, res) => {
       interceptedRequest.continue()
     })
 
-    await page.goto(url)
+    page.goto(url)
     await page.waitForNetworkIdle({ idleTime: Number(WAIT_AFTER_LAST_REQUEST) })
 
     let html = await page.evaluate(() => document.documentElement.outerHTML)
