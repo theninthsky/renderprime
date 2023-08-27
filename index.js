@@ -58,8 +58,13 @@ const server = http.createServer(async (req, res) => {
 
     page.on('request', interceptedRequest => {
       if (interceptedRequest.isInterceptResolutionHandled()) return
-      if (resourcesToBlock.some(resource => interceptedRequest.url().endsWith(resource))) interceptedRequest.abort()
-      else interceptedRequest.continue()
+      if (resourcesToBlock.some(resource => interceptedRequest.url().endsWith(resource))) {
+        return interceptedRequest.abort()
+      }
+
+      console.log(`Unintercepted url: ${interceptedRequest.url()}`)
+
+      interceptedRequest.continue()
     })
 
     await page.goto(url)
@@ -88,6 +93,8 @@ const server = http.createServer(async (req, res) => {
     emptyTab = await browser.newPage()
     numOfOpenTabs++
   }
+
+  console.log(`There are ${numOfOpenTabs} open tabs\n`)
 })
 
 server.listen(PORT, () => console.log(`Server is running on port ${PORT}\n`))
