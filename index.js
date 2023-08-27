@@ -5,14 +5,19 @@ import resourcesToBlock from './utils/resourcesToBlock.js'
 import removeScriptTags from './utils/removeScriptTags.js'
 import removePreloads from './utils/removePreloads.js'
 
-const { PORT = 8000, PRERENDER_USER_AGENT = 'Prerender', MAX_OPEN_TABS = 10 } = process.env
+const {
+  PORT = 8000,
+  PRERENDER_USER_AGENT = 'Prerender',
+  WAIT_AFTER_LAST_REQUEST = 200,
+  MAX_OPEN_TABS = 20
+} = process.env
 
-const browser = await puppeteer.launch({ headless: 'new' })
+const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] })
 
 let emptyTab = await browser.newPage()
 let numOfOpenTabs = 1
 
-console.log('Started Headless Chrome')
+console.log(`Started ${await browser.version()}`)
 
 const server = http.createServer(async (req, res) => {
   if (!req.url.includes('?url=')) {
@@ -58,9 +63,7 @@ const server = http.createServer(async (req, res) => {
     })
 
     await page.goto(url)
-    await page.deleteCookie(...(await page.cookies()))
-    await page.evaluate(() => localStorage.clear())
-    await page.waitForNetworkIdle({ idleTime: 100 })
+    await page.waitForNetworkIdle({ idleTime: WAIT_AFTER_LAST_REQUEST })
 
     let html = await page.evaluate(() => document.documentElement.outerHTML)
 
