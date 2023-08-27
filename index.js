@@ -68,14 +68,6 @@ const server = http.createServer(async (req, res) => {
     await page.goto(url)
     await page.waitForNetworkIdle({ idleTime: WAIT_AFTER_LAST_REQUEST })
 
-    console.log(
-      await page.evaluate(() =>
-        JSON.stringify(
-          window.performance.getEntries().filter(({ name }) => name === 'https://pokeapi.co/api/v2/pokemon?limit=10000')
-        )
-      )
-    )
-
     let html = await page.evaluate(() => document.documentElement.outerHTML)
 
     html = removeScriptTags(html)
