@@ -40,8 +40,8 @@ const server = http.createServer(async (req, res) => {
     return res.end()
   }
 
-  const page = await browser.newPage()
   numOfOpenTabs++
+  const page = await browser.newPage()
 
   try {
     await page.setUserAgent(PRERENDER_USER_AGENT)
