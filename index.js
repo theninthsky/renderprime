@@ -33,7 +33,7 @@ const server = http.createServer(async (req, res) => {
 
   console.log(`Requesting ${url}`)
 
-  if (numOfOpenTabs === MAX_OPEN_TABS) {
+  if (numOfOpenTabs === Number(MAX_OPEN_TABS)) {
     console.log(`Too many requests!\n`)
 
     res.writeHead(429)
@@ -58,7 +58,7 @@ const server = http.createServer(async (req, res) => {
     })
 
     await page.goto(url)
-    await page.waitForNetworkIdle({ idleTime: WAIT_AFTER_LAST_REQUEST })
+    await page.waitForNetworkIdle({ idleTime: Number(WAIT_AFTER_LAST_REQUEST) })
 
     let html = await page.evaluate(() => document.documentElement.outerHTML)
 
