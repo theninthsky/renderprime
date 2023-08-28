@@ -14,8 +14,10 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "pm2 start index.js -i 2",
-    "dev": "nodemon index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "cluster": "pm2 start index.js -i max",
+    "cluster:render.com": "pm2 start index.js -i 2"
   },
   "dependencies": {
     "p-queue": "^7.3.4",
