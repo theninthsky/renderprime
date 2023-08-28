@@ -9,8 +9,8 @@ const {
   PORT = 8000,
   PRERENDER_USER_AGENT = 'Prerender',
   WEBSITE_URL,
-  WAIT_AFTER_LAST_REQUEST = 100,
-  NUMBER_OF_TABS = 10
+  WAIT_AFTER_LAST_REQUEST = 200,
+  NUMBER_OF_TABS = 5
 } = process.env
 
 const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] })
@@ -19,7 +19,7 @@ console.log(`Started ${await browser.version()}`)
 
 const tabs = []
 
-new Array(NUMBER_OF_TABS).fill().forEach(async (_, ind) => {
+new Array(+NUMBER_OF_TABS).fill().forEach(async (_, ind) => {
   const page = await browser.newPage()
 
   await page.setUserAgent(PRERENDER_USER_AGENT)
@@ -74,9 +74,9 @@ const server = http.createServer(async (req, res) => {
   tab.active = true
 
   try {
-    await page.setViewport({ width: Number(width), height: 768 })
+    await page.setViewport({ width: +width, height: 768 })
     await page.evaluate(url => window.navigateTo(url), url)
-    await page.waitForNetworkIdle({ idleTime: Number(WAIT_AFTER_LAST_REQUEST) })
+    await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST })
 
     let html = await page.evaluate(() => document.documentElement.outerHTML)
 
