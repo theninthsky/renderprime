@@ -11,7 +11,7 @@ const { PORT = 8000, USER_AGENT = 'Prerender', WEBSITE_URL, WAIT_AFTER_LAST_REQU
 
 const queue = new PQueue({ concurrency: 1, timeout: 30 * 1000 })
 const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] })
-const page = await browser.newPage()
+const [page] = await browser.pages()
 
 await page.setUserAgent(USER_AGENT)
 await page.setViewport({ width: 1440, height: 768 })
