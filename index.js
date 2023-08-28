@@ -1,45 +1,41 @@
 import http from 'node:http'
 import url from 'node:url'
+import PQueue from 'p-queue'
 import puppeteer from 'puppeteer'
 
 import resourcesToBlock from './utils/resourcesToBlock.js'
 import removeScriptTags from './utils/removeScriptTags.js'
 import removePreloads from './utils/removePreloads.js'
 
-const {
-  PORT = 8000,
-  PRERENDER_USER_AGENT = 'Prerender',
-  WEBSITE_URL,
-  WAIT_AFTER_LAST_REQUEST = 200,
-  NUMBER_OF_TABS = 5
-} = process.env
+const { PORT = 8000, USER_AGENT = 'Prerender', WEBSITE_URL, WAIT_AFTER_LAST_REQUEST = 200 } = process.env
 
+const queue = new PQueue({ concurrency: 1, timeout: 30 * 1000 })
 const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] })
+const page = await browser.newPage()
+
+await page.setUserAgent(USER_AGENT)
+await page.setViewport({ width: 1440, height: 768 })
+await page.setRequestInterception(true)
+
+page.goto(WEBSITE_URL)
+
+page.on('request', interceptedRequest => {
+  if (interceptedRequest.isInterceptResolutionHandled()) return
+  if (resourcesToBlock.some(resource => interceptedRequest.url().endsWith(resource))) {
+    return interceptedRequest.abort()
+  }
+
+  interceptedRequest.continue()
+})
 
 console.log(`Started ${await browser.version()}`)
 
-const tabs = []
+const renderPage = async websiteUrl => {
+  await page.evaluate(url => window.navigateTo(url), websiteUrl)
+  await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST })
 
-new Array(+NUMBER_OF_TABS).fill().forEach(async () => {
-  const page = await browser.newPage()
-
-  await page.setUserAgent(PRERENDER_USER_AGENT)
-  await page.setViewport({ width: 1440, height: 768 })
-  await page.setRequestInterception(true)
-
-  page.goto(WEBSITE_URL)
-
-  page.on('request', interceptedRequest => {
-    if (interceptedRequest.isInterceptResolutionHandled()) return
-    if (resourcesToBlock.some(resource => interceptedRequest.url().endsWith(resource))) {
-      return interceptedRequest.abort()
-    }
-
-    interceptedRequest.continue()
-  })
-
-  tabs.push({ page, active: false })
-})
+  return await page.evaluate(() => document.documentElement.outerHTML)
+}
 
 const server = http.createServer(async (req, res) => {
   if (!req.url.includes('?url=')) {
@@ -51,23 +47,8 @@ const server = http.createServer(async (req, res) => {
 
   console.log(`Requesting ${websiteUrl}`)
 
-  const tab = tabs.find(({ active }) => !active)
-
-  if (!tab) {
-    console.log(`Too many requests!\n`)
-
-    res.writeHead(429)
-    return res.end()
-  }
-
-  const { page } = tab
-  tab.active = true
-
   try {
-    await page.evaluate(url => window.navigateTo(url), websiteUrl)
-    await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST })
-
-    let html = await page.evaluate(() => document.documentElement.outerHTML)
+    let html = await queue.add(() => renderPage(websiteUrl))
 
     html = removeScriptTags(html)
     html = removePreloads(html)
@@ -82,8 +63,6 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(503)
     res.end()
   }
-
-  tab.active = false
 })
 
 server.listen(PORT, () => console.log(`Server is running on port ${PORT}\n`))

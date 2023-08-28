@@ -18,6 +18,7 @@
     "dev": "nodemon index.js"
   },
   "dependencies": {
+    "p-queue": "^7.3.4",
     "puppeteer": "^21.1.0"
   },
   "devDependencies": {
