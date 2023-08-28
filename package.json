@@ -16,7 +16,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "cluster": "pm2 start index.js -i max",
+    "cluster": "pm2 start index.js -i -1",
     "cluster:render.com": "pm2 start index.js -i 2"
   },
   "dependencies": {
