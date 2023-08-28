@@ -52,10 +52,9 @@ const server = http.createServer(async (req, res) => {
     return res.end()
   }
 
-  const { url, width = 1440 } = Object.fromEntries(
+  const { url } = Object.fromEntries(
     decodeURIComponent(req.url)
       .split('?')[1]
-      .split('&')
       .map(param => param.split('='))
   )
 
@@ -74,7 +73,6 @@ const server = http.createServer(async (req, res) => {
   tab.active = true
 
   try {
-    await page.setViewport({ width: +width, height: 768 })
     await page.evaluate(url => window.navigateTo(url), url)
     await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST })
 
