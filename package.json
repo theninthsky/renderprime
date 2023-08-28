@@ -14,7 +14,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "pm2 start index.js -i max",
+    "start": "pm2 start index.js -i 2",
     "dev": "nodemon index.js"
   },
   "dependencies": {
