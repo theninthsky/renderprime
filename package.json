@@ -9,14 +9,18 @@
   "license": "MIT",
   "repository": "https://github.com/theninthsky/renderprime",
   "engines": {
-    "node": ">=16.3.0 <17"
+    "node": ">=16.3.0"
   },
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "dependencies": {
     "puppeteer": "^21.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
   }
 }
