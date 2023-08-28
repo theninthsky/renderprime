@@ -1,4 +1,5 @@
 import http from 'node:http'
+import url from 'node:url'
 import puppeteer from 'puppeteer'
 
 import resourcesToBlock from './utils/resourcesToBlock.js'
@@ -19,7 +20,7 @@ console.log(`Started ${await browser.version()}`)
 
 const tabs = []
 
-new Array(+NUMBER_OF_TABS).fill().forEach(async (_, ind) => {
+new Array(+NUMBER_OF_TABS).fill().forEach(async () => {
   const page = await browser.newPage()
 
   await page.setUserAgent(PRERENDER_USER_AGENT)
@@ -37,13 +38,7 @@ new Array(+NUMBER_OF_TABS).fill().forEach(async (_, ind) => {
     interceptedRequest.continue()
   })
 
-  tabs.push({
-    id: ind + 1,
-    page,
-    active: false
-  })
-
-  console.log(`Tab ${ind + 1} is open`)
+  tabs.push({ page, active: false })
 })
 
 const server = http.createServer(async (req, res) => {
@@ -52,13 +47,9 @@ const server = http.createServer(async (req, res) => {
     return res.end()
   }
 
-  const { url } = Object.fromEntries(
-    decodeURIComponent(req.url)
-      .split('?')[1]
-      .map(param => param.split('='))
-  )
+  const { url: websiteUrl } = url.parse(req.url, true).query
 
-  console.log(`Requesting ${url}`)
+  console.log(`Requesting ${websiteUrl}`)
 
   const tab = tabs.find(({ active }) => !active)
 
@@ -69,11 +60,11 @@ const server = http.createServer(async (req, res) => {
     return res.end()
   }
 
-  const { id, page } = tab
+  const { page } = tab
   tab.active = true
 
   try {
-    await page.evaluate(url => window.navigateTo(url), url)
+    await page.evaluate(url => window.navigateTo(url), websiteUrl)
     await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST })
 
     let html = await page.evaluate(() => document.documentElement.outerHTML)
@@ -84,11 +75,11 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
     res.end(html)
 
-    console.log(`Request sent for ${url} (Tab ${id})\n`)
+    console.log(`Request sent for ${websiteUrl}\n`)
   } catch (err) {
     console.error(err)
 
-    res.writeHead(404)
+    res.writeHead(503)
     res.end()
   }
 
