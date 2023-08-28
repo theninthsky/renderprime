@@ -75,6 +75,7 @@ const server = http.createServer(async (req, res) => {
 
   try {
     await page.setViewport({ width: +width, height: 768 })
+    await page.waitForNavigation()
     await page.evaluate(url => window.navigateTo(url), url)
     await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST })
 
