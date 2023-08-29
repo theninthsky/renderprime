@@ -12,7 +12,7 @@ const numCPUs = availableParallelism()
 const { CPUS = numCPUs - 1, PORT = 8000, RENDER_TIMEOUT = 10000 } = process.env
 
 const children = []
-const queue = new PQueue({ concurrency: CPUS, timeout: 30 * 1000 })
+const queue = new PQueue({ concurrency: +CPUS, timeout: 30 * 1000 })
 
 for (let i = 0; i < +CPUS; i++) children.push({ id: i + 1, prerenderer: fork('prerenderer.js'), active: false })
 
