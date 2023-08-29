@@ -1,41 +1,20 @@
+import { availableParallelism } from 'node:os'
+import { fork } from 'node:child_process'
+import PQueue from 'p-queue'
 import http from 'node:http'
 import url from 'node:url'
-import PQueue from 'p-queue'
-import puppeteer from 'puppeteer'
 
-import resourcesToBlock from './utils/resourcesToBlock.js'
 import removeScriptTags from './utils/removeScriptTags.js'
 import removePreloads from './utils/removePreloads.js'
 
-const { PORT = 8000, USER_AGENT = 'Prerender', WEBSITE_URL, WAIT_AFTER_LAST_REQUEST = 200 } = process.env
+const numCPUs = availableParallelism()
 
-const queue = new PQueue({ concurrency: 1, timeout: 30 * 1000 })
-const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] })
-const [page] = await browser.pages()
+const { CPUS = numCPUs - 1, PORT = 8000, RENDER_TIMEOUT = 10000 } = process.env
 
-await page.setUserAgent(USER_AGENT)
-await page.setViewport({ width: 1440, height: 768 })
-await page.setRequestInterception(true)
+const children = []
+const queue = new PQueue({ concurrency: CPUS, timeout: 30 * 1000 })
 
-page.goto(WEBSITE_URL)
-
-page.on('request', interceptedRequest => {
-  if (interceptedRequest.isInterceptResolutionHandled()) return
-  if (resourcesToBlock.some(resource => interceptedRequest.url().endsWith(resource))) {
-    return interceptedRequest.abort()
-  }
-
-  interceptedRequest.continue()
-})
-
-console.log(`Started ${await browser.version()}`)
-
-const renderPage = async websiteUrl => {
-  await page.evaluate(url => window.navigateTo(url), websiteUrl)
-  await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST })
-
-  return await page.evaluate(() => document.documentElement.outerHTML)
-}
+for (let i = 0; i < +CPUS; i++) children.push({ id: i + 1, prerenderer: fork('prerenderer.js'), active: false })
 
 const server = http.createServer(async (req, res) => {
   if (!req.url.includes('?url=')) {
@@ -43,26 +22,44 @@ const server = http.createServer(async (req, res) => {
     return res.end()
   }
 
-  const { url: websiteUrl } = url.parse(req.url, true).query
+  queue.add(
+    () =>
+      new Promise((resolve, reject) => {
+        const { url: websiteUrl } = url.parse(req.url, true).query
 
-  console.log(`Requesting ${websiteUrl}`)
+        console.log(`Requesting ${websiteUrl}`)
 
-  try {
-    let html = await queue.add(() => renderPage(websiteUrl))
+        const child = children.find(({ active }) => !active)
 
-    html = removeScriptTags(html)
-    html = removePreloads(html)
+        child.active = true
 
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
-    res.end(html)
+        child.prerenderer.send(websiteUrl)
 
-    console.log(`Request sent for ${websiteUrl}\n`)
-  } catch (err) {
-    console.error(err)
+        child.prerenderer.once('message', html => {
+          child.active = false
 
-    res.writeHead(503)
-    res.end()
-  }
+          html = removeScriptTags(html)
+          html = removePreloads(html)
+
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+          res.end(html)
+
+          console.log(`Request sent for ${websiteUrl} [#${child.id}] `)
+
+          resolve()
+        })
+
+        setTimeout(() => {
+          console.error(`Render timeout [#${child.id}]`)
+
+          res.writeHead(503)
+          res.end()
+          reject()
+        }, +RENDER_TIMEOUT)
+      })
+  )
 })
 
 server.listen(PORT, () => console.log(`Server is running on port ${PORT}\n`))
+
+process.on('exit', () => children.forEach(child => child.kill(9)))
