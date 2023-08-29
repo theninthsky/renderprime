@@ -35,13 +35,13 @@ const server = http.createServer(async (req, res) => {
 
         child.prerenderer.send(websiteUrl)
 
-        const timeoutID = setTimeout(() => {
-          console.error(`Render timeout [#${child.id}]`)
+        // const timeoutID = setTimeout(() => {
+        //   console.error(`Render timeout [#${child.id}]`)
 
-          res.writeHead(503)
-          res.end()
-          reject()
-        }, +RENDER_TIMEOUT)
+        //   res.writeHead(503)
+        //   res.end()
+        //   reject()
+        // }, +RENDER_TIMEOUT)
 
         child.prerenderer.once('message', html => {
           clearTimeout(timeoutID)
