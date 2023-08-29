@@ -44,7 +44,7 @@ const server = http.createServer(async (req, res) => {
         // }, +RENDER_TIMEOUT)
 
         child.prerenderer.once('message', html => {
-          clearTimeout(timeoutID)
+          // clearTimeout(timeoutID)
 
           child.active = false
 
