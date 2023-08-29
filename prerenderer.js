@@ -25,10 +25,14 @@ page.on('request', interceptedRequest => {
 console.log(`Started ${await browser.version()}`)
 
 const renderPage = async websiteUrl => {
-  await page.evaluate(url => window.navigateTo(url), websiteUrl)
-  await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST })
+  try {
+    await page.evaluate(url => window.navigateTo(url), websiteUrl)
+    await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST })
 
-  return await page.evaluate(() => document.documentElement.outerHTML)
+    return await page.evaluate(() => document.documentElement.outerHTML)
+  } catch {
+    return
+  }
 }
 
 process.on('message', async websiteUrl => {
