@@ -36,10 +36,3 @@ process.on('message', async websiteUrl => {
 
   process.send(html)
 })
-
-process.on('SIGKILL', async () => {
-  const pages = await browser.pages()
-
-  for (const page of pages) await page.close()
-  await browser.close()
-})
