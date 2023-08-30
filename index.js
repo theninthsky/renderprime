@@ -98,7 +98,6 @@ const renderPage = async websiteUrl => {
   }
 
   const html = await page.evaluate(() => document.documentElement.outerHTML)
-  await page.reload()
 
   tab.active = false
 
