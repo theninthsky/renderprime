@@ -11,7 +11,7 @@ import removePreloads from './utils/removePreloads.js'
 const numCPUs = availableParallelism()
 
 const {
-  CPUS = Math.min(numCPUs - 1, 10),
+  CPUS = Math.min(numCPUs - 1, 15),
   PORT = 8000,
   RATE_LIMIT = 100,
   USER_AGENT = 'Prerender',
@@ -44,9 +44,9 @@ for (let i = 0; i < +CPUS; i++) {
   tabs.push({ id: i + 1, page, active: false })
 }
 
-const [emptyTab] = await browser.pages()
+// const [emptyTab] = await browser.pages()
 
-emptyTab.close()
+// emptyTab.close()
 
 console.log(`Started ${await browser.version()} (${CPUS} tabs)`)
 
