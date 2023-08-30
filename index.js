@@ -21,7 +21,7 @@ const {
 
 const tabs = []
 const queue = new PQueue({ concurrency: +CPUS, timeout: 30 * 1000 })
-const browser = await puppeteer.launch({ headless: false, args: ['--no-sandbox'] })
+const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] })
 
 for (let i = 0; i < +CPUS; i++) {
   const page = await browser.newPage()
