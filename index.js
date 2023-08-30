@@ -16,11 +16,12 @@ const {
   RATE_LIMIT = 100,
   USER_AGENT = 'Prerender',
   WEBSITE_URL,
-  WAIT_AFTER_LAST_REQUEST = 200
+  WAIT_AFTER_LAST_REQUEST = 200,
+  WAIT_AFTER_LAST_REQUEST_TIMEOUT = 10000
 } = process.env
 
 const tabs = []
-const queue = new PQueue({ concurrency: +CPUS, timeout: 30 * 1000 })
+const queue = new PQueue({ concurrency: +CPUS })
 const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] })
 
 for (let i = 0; i < +CPUS; i++) {
@@ -49,26 +50,6 @@ emptyTab.close()
 
 console.log(`Started ${await browser.version()} (${CPUS} tabs)`)
 
-const renderPage = async websiteUrl => {
-  const tab = tabs.find(({ active }) => !active)
-
-  tab.active = true
-
-  try {
-    await tab.page.evaluate(url => window.navigateTo(url), websiteUrl)
-    await tab.page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST })
-    const html = await tab.page.evaluate(() => document.documentElement.outerHTML)
-
-    tab.active = false
-
-    return { html, tabID: tab.id }
-  } catch (err) {
-    tab.active = false
-
-    throw Error(err)
-  }
-}
-
 const server = http.createServer(async (req, res) => {
   if (!req.url.includes('?url=')) {
     res.writeHead(400)
@@ -81,8 +62,6 @@ const server = http.createServer(async (req, res) => {
   }
 
   const { url: websiteUrl } = url.parse(req.url, true).query
-
-  console.log(`Requesting ${websiteUrl}`)
 
   try {
     let { html, tabID } = await queue.add(() => renderPage(websiteUrl))
@@ -101,5 +80,28 @@ const server = http.createServer(async (req, res) => {
     res.end()
   }
 })
+
+const renderPage = async websiteUrl => {
+  const tab = tabs.find(({ active }) => !active)
+  const { id: tabID, page } = tab
+
+  tab.active = true
+
+  console.log(`Requesting ${websiteUrl} (#${tabID})`)
+
+  try {
+    await page.evaluate(url => window.navigateTo(url), websiteUrl)
+    await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST, timeout: +WAIT_AFTER_LAST_REQUEST_TIMEOUT })
+    const html = await page.evaluate(() => document.documentElement.outerHTML)
+
+    tab.active = false
+
+    return { html, tabID }
+  } catch (err) {
+    tab.active = false
+
+    throw Error(`${err.message} (#${tabID})`)
+  }
+}
 
 server.listen(PORT, () => console.log(`Server is running on port ${PORT}\n`))
