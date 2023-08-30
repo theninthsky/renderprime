@@ -17,7 +17,7 @@ const {
   USER_AGENT = 'Prerender',
   WEBSITE_URL,
   WAIT_AFTER_LAST_REQUEST = 200,
-  WAIT_AFTER_LAST_REQUEST_TIMEOUT = 10000
+  WAIT_AFTER_LAST_REQUEST_TIMEOUT = 5000
 } = process.env
 
 const tabs = []
@@ -89,21 +89,20 @@ const renderPage = async websiteUrl => {
 
   console.log(`Requesting ${websiteUrl} (#${tabID})`)
 
+  await page.evaluate(url => window.navigateTo(url), websiteUrl)
+
   try {
-    await page.evaluate(url => window.navigateTo(url), websiteUrl)
     await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST, timeout: +WAIT_AFTER_LAST_REQUEST_TIMEOUT })
-    const html = await page.evaluate(() => document.documentElement.outerHTML)
-
-    tab.active = false
-
-    return { html, tabID }
   } catch (err) {
-    tab.active = false
-
-    console.log(await page.evaluate(() => document.documentElement.outerHTML))
-
-    throw Error(`${err.message} (#${tabID})`)
+    console.error(`${err.message} (#${tabID})`)
   }
+
+  const html = await page.evaluate(() => document.documentElement.outerHTML)
+  await page.reload()
+
+  tab.active = false
+
+  return { html, tabID }
 }
 
 server.listen(PORT, () => console.log(`Server is running on port ${PORT}\n`))
