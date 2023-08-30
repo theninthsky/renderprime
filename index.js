@@ -43,6 +43,10 @@ for (let i = 0; i < +CPUS; i++) {
   tabs.push({ id: i + 1, page, active: false })
 }
 
+const [emptyTab] = await browser.pages()
+
+emptyTab.close()
+
 console.log(`Started ${await browser.version()} (${CPUS} tabs)`)
 
 const renderPage = async websiteUrl => {
