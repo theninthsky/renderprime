@@ -45,7 +45,9 @@ for (let i = 0; i < +CPUS; i++) {
 
 console.log(`Started ${await browser.version()} (7 tabs)`)
 
-const renderPage = async (tab, websiteUrl) => {
+const renderPage = async websiteUrl => {
+  const tab = tabs.find(({ active }) => !active)
+
   tab.active = true
 
   await tab.page.evaluate(url => window.navigateTo(url), websiteUrl)
@@ -54,7 +56,7 @@ const renderPage = async (tab, websiteUrl) => {
 
   tab.active = false
 
-  return html
+  return { html, tabID: tab.id }
 }
 
 const server = http.createServer(async (req, res) => {
@@ -73,9 +75,7 @@ const server = http.createServer(async (req, res) => {
   console.log(`Requesting ${websiteUrl}`)
 
   try {
-    const tab = tabs.find(({ active }) => !active)
-
-    let html = await queue.add(() => renderPage(tab, websiteUrl))
+    let { html, tabID } = await queue.add(() => renderPage(websiteUrl))
 
     html = removeScriptTags(html)
     html = removePreloads(html)
@@ -83,7 +83,7 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
     res.end(html)
 
-    console.log(`Request sent for ${websiteUrl} [#${tab.id}]`)
+    console.log(`Request sent for ${websiteUrl} (#${tabID})`)
   } catch (err) {
     console.error(err)
 
