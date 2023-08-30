@@ -54,13 +54,19 @@ const renderPage = async websiteUrl => {
 
   tab.active = true
 
-  await tab.page.evaluate(url => window.navigateTo(url), websiteUrl)
-  await tab.page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST })
-  const html = await tab.page.evaluate(() => document.documentElement.outerHTML)
+  try {
+    await tab.page.evaluate(url => window.navigateTo(url), websiteUrl)
+    await tab.page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST })
+    const html = await tab.page.evaluate(() => document.documentElement.outerHTML)
 
-  tab.active = false
+    tab.active = false
 
-  return { html, tabID: tab.id }
+    return { html, tabID: tab.id }
+  } catch (err) {
+    tab.active = false
+
+    throw Error(err)
+  }
 }
 
 const server = http.createServer(async (req, res) => {
