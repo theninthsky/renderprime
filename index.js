@@ -43,7 +43,7 @@ for (let i = 0; i < +CPUS; i++) {
   tabs.push({ id: i + 1, page, active: false })
 }
 
-console.log(`Started ${await browser.version()} (7 tabs)`)
+console.log(`Started ${await browser.version()} (${CPUS} tabs)`)
 
 const renderPage = async websiteUrl => {
   const tab = tabs.find(({ active }) => !active)
