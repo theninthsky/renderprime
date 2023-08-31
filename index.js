@@ -11,7 +11,7 @@ import removePreloads from './utils/removePreloads.js'
 const numCPUs = availableParallelism()
 
 const {
-  CPUS = numCPUs - 1,
+  CPUS = Math.min(numCPUs - 1, 10),
   PORT = 8000,
   RATE_LIMIT = 100,
   USER_AGENT = 'Prerender',
@@ -89,7 +89,7 @@ const renderPage = async websiteUrl => {
 
   console.log(`Requesting ${websiteUrl} (#${tabID})`)
 
-  await Promise.all([page.waitForNavigation(), page.evaluate(url => window.navigateTo(url), websiteUrl)])
+  await page.evaluate(url => window.navigateTo(url), websiteUrl)
 
   try {
     await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST, timeout: +WAIT_AFTER_LAST_REQUEST_TIMEOUT })
@@ -98,6 +98,7 @@ const renderPage = async websiteUrl => {
   }
 
   const html = await page.evaluate(() => document.documentElement.outerHTML)
+  await page.reload()
 
   tab.active = false
 
@@ -105,5 +106,3 @@ const renderPage = async websiteUrl => {
 }
 
 server.listen(PORT, () => console.log(`Server is running on port ${PORT}\n`))
-
-process.on('exit', () => browser.close())
