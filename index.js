@@ -24,7 +24,7 @@ const tabs = []
 const queue = new PQueue({ concurrency: +CPUS })
 const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] })
 
-for (let i = 0; i < +CPUS; i++) {
+const openPage = async () => {
   const page = await browser.newPage()
 
   await page.setUserAgent(USER_AGENT)
@@ -41,7 +41,11 @@ for (let i = 0; i < +CPUS; i++) {
     interceptedRequest.continue()
   })
 
-  tabs.push({ id: i + 1, page, active: false })
+  return page
+}
+
+for (let i = 0; i < +CPUS; i++) {
+  tabs.push({ index: i, page: await openPage(), active: false })
 }
 
 const [emptyTab] = await browser.pages()
@@ -49,6 +53,37 @@ const [emptyTab] = await browser.pages()
 emptyTab.close()
 
 console.log(`Started ${await browser.version()} (${CPUS} tabs)`)
+
+const renderPage = async websiteUrl => {
+  const tab = tabs.find(({ active }) => !active)
+  const { index, page } = tab
+
+  tab.active = true
+
+  console.log(`Requesting ${websiteUrl} (#${index})`)
+
+  let html
+
+  await page.evaluate(url => window.navigateTo(url), websiteUrl)
+
+  try {
+    await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST, timeout: +WAIT_AFTER_LAST_REQUEST_TIMEOUT })
+
+    html = await page.evaluate(() => document.documentElement.outerHTML)
+  } catch (err) {
+    console.error(`${err.message} (#${index})`)
+
+    html = await page.evaluate(() => document.documentElement.outerHTML)
+
+    tab.page.close()
+
+    tab.page = await openPage()
+  }
+
+  tab.active = false
+
+  return { html, tabIndex: index }
+}
 
 const server = http.createServer(async (req, res) => {
   if (!req.url.includes('?url=')) {
@@ -64,7 +99,7 @@ const server = http.createServer(async (req, res) => {
   const { url: websiteUrl } = url.parse(req.url, true).query
 
   try {
-    let { html, tabID } = await queue.add(() => renderPage(websiteUrl))
+    let { html, tabIndex } = await queue.add(() => renderPage(websiteUrl))
 
     html = removeScriptTags(html)
     html = removePreloads(html)
@@ -72,7 +107,7 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
     res.end(html)
 
-    console.log(`Request sent for ${websiteUrl} (#${tabID})`)
+    console.log(`Request sent for ${websiteUrl} (#${tabIndex})`)
   } catch (err) {
     console.error(err)
 
@@ -80,32 +115,5 @@ const server = http.createServer(async (req, res) => {
     res.end()
   }
 })
-
-const renderPage = async websiteUrl => {
-  const tab = tabs.find(({ active }) => !active)
-  const { id: tabID, page } = tab
-
-  tab.active = true
-
-  console.log(`Requesting ${websiteUrl} (#${tabID})`)
-
-  let html
-
-  await page.evaluate(url => window.navigateTo(url), websiteUrl)
-
-  try {
-    await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST, timeout: +WAIT_AFTER_LAST_REQUEST_TIMEOUT })
-    html = await page.evaluate(() => document.documentElement.outerHTML)
-  } catch (err) {
-    console.error(`${err.message} (#${tabID})`)
-
-    html = await page.evaluate(() => document.documentElement.outerHTML)
-    await page.goto(WEBSITE_URL)
-  }
-
-  tab.active = false
-
-  return { html, tabID }
-}
 
 server.listen(PORT, () => console.log(`Server is running on port ${PORT}\n`))
