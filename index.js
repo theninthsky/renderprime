@@ -89,16 +89,19 @@ const renderPage = async websiteUrl => {
 
   console.log(`Requesting ${websiteUrl} (#${tabID})`)
 
+  let html
+
   await page.evaluate(url => window.navigateTo(url), websiteUrl)
 
   try {
     await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST, timeout: +WAIT_AFTER_LAST_REQUEST_TIMEOUT })
+    html = await page.evaluate(() => document.documentElement.outerHTML)
   } catch (err) {
     console.error(`${err.message} (#${tabID})`)
-  }
 
-  const html = await page.evaluate(() => document.documentElement.outerHTML)
-  await page.reload()
+    html = await page.evaluate(() => document.documentElement.outerHTML)
+    await page.goto(WEBSITE_URL)
+  }
 
   tab.active = false
 
