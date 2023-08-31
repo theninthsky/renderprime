@@ -11,7 +11,7 @@ import removePreloads from './utils/removePreloads.js'
 const numCPUs = availableParallelism()
 
 const {
-  CPUS = Math.min(numCPUs - 1, 10),
+  CPUS = numCPUs - 1,
   PORT = 8000,
   RATE_LIMIT = 100,
   USER_AGENT = 'Prerender',
