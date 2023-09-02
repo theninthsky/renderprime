@@ -11,7 +11,7 @@ import removePreloads from './utils/removePreloads.js'
 const numCPUs = availableParallelism()
 
 const {
-  CPUS = Math.min(numCPUs - 1, 10),
+  CPUS = numCPUs - 1,
   PORT = 8000,
   RATE_LIMIT = 100,
   USER_AGENT = 'Prerender',
@@ -44,9 +44,7 @@ const openPage = async () => {
   return page
 }
 
-for (let i = 0; i < +CPUS; i++) {
-  tabs.push({ index: i, page: await openPage(), active: false })
-}
+for (let i = 0; i < +CPUS; i++) tabs.push({ index: i, page: await openPage(), active: false })
 
 const [emptyTab] = await browser.pages()
 
@@ -64,7 +62,7 @@ const renderPage = async websiteUrl => {
 
   let html
 
-  await page.evaluate(url => window.navigateTo(url), websiteUrl)
+  await Promise.all([page.waitForNavigation(), page.evaluate(url => window.navigateTo(url), websiteUrl)])
 
   try {
     await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST, timeout: +WAIT_AFTER_LAST_REQUEST_TIMEOUT })
