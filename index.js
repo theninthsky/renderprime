@@ -17,7 +17,8 @@ const {
   USER_AGENT = 'Prerender',
   WEBSITE_URL,
   WAIT_AFTER_LAST_REQUEST = 200,
-  WAIT_AFTER_LAST_REQUEST_TIMEOUT = 5000
+  WAIT_AFTER_LAST_REQUEST_TIMEOUT = 5000,
+  RENDER_SERVER_URL
 } = process.env
 
 const tabs = []
@@ -129,3 +130,5 @@ const renderPage = async websiteUrl => {
 }
 
 server.listen(PORT, () => console.log(`Server is running on port ${PORT}\n`))
+
+if (RENDER_SERVER_URL) setInterval(() => http.get(RENDER_SERVER_URL), 10 * 60 * 1000) // Keeps render.com free server awake
