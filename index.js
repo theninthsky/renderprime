@@ -13,7 +13,7 @@ const numCPUs = availableParallelism()
 const {
   CPUS = numCPUs - 1,
   PORT = 8000,
-  RATE_LIMIT = 100,
+  RATE_LIMIT = CPUS * 20,
   USER_AGENT = 'Prerender',
   WEBSITE_URL,
   WAIT_AFTER_LAST_REQUEST = 200,
@@ -52,6 +52,51 @@ emptyTab.close()
 
 console.log(`Started ${await browser.version()} (${CPUS} tabs)`)
 
+const server = http.createServer(async (req, res) => {
+  const { pathname, query } = url.parse(req.url, true)
+
+  if (pathname === '/reload') {
+    await queue.onIdle()
+    queue.pause()
+
+    await Promise.all(tabs.map(({ page }) => page.reload()))
+
+    console.log('\nReloaded all pages\n')
+
+    queue.start()
+
+    res.writeHead(200)
+    return res.end()
+  }
+
+  if (!query.url) {
+    res.writeHead(400)
+    return res.end()
+  }
+
+  if (queue.size > +RATE_LIMIT) {
+    res.writeHead(529)
+    return res.end()
+  }
+
+  try {
+    let { html, tabIndex } = await queue.add(() => renderPage(query.url))
+
+    html = removeScriptTags(html)
+    html = removePreloads(html)
+
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+    res.end(html)
+
+    console.log(`Request sent for ${query.url} (#${tabIndex})`)
+  } catch (err) {
+    console.error(err)
+
+    res.writeHead(503)
+    res.end()
+  }
+})
+
 const renderPage = async websiteUrl => {
   const tab = tabs.find(({ active }) => !active)
   const { index, page } = tab
@@ -82,36 +127,5 @@ const renderPage = async websiteUrl => {
 
   return { html, tabIndex: index }
 }
-
-const server = http.createServer(async (req, res) => {
-  if (!req.url.includes('?url=')) {
-    res.writeHead(400)
-    return res.end()
-  }
-
-  if (queue.size > +RATE_LIMIT) {
-    res.writeHead(529)
-    return res.end()
-  }
-
-  const { url: websiteUrl } = url.parse(req.url, true).query
-
-  try {
-    let { html, tabIndex } = await queue.add(() => renderPage(websiteUrl))
-
-    html = removeScriptTags(html)
-    html = removePreloads(html)
-
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
-    res.end(html)
-
-    console.log(`Request sent for ${websiteUrl} (#${tabIndex})`)
-  } catch (err) {
-    console.error(err)
-
-    res.writeHead(503)
-    res.end()
-  }
-})
 
 server.listen(PORT, () => console.log(`Server is running on port ${PORT}\n`))
