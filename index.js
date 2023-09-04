@@ -111,7 +111,7 @@ const renderPage = async websiteUrl => {
     await page.evaluate(
       ({ url, eventName }) => {
         return new Promise(resolve => {
-          window.addEventListener(eventName, resolve)
+          window.addEventListener(eventName, resolve, { once: true })
           window.navigateTo(url)
         })
       },
