@@ -7,7 +7,7 @@ It leaverages caching and uses functional navigations to achieve unmatched perfo
 You only have to make sure that your app has no memory leaks and that memory doesn't build up through page navigations.
 
 - [Environment Variables](#environment-variables)
-- [Exposing Navigation Function](#Exposing-navigation-function)
+- [Exposing Navigation Function](#exposing-navigation-function)
 - [Deploying](#deploying)
 - [Benchmarks](#benchmarks)
 
@@ -28,6 +28,60 @@ You only have to make sure that your app has no memory leaks and that memory doe
 `WAIT_AFTER_LAST_REQUEST_TIMEOUT`: For how many milliseconds should the browser wait for the last request to return before giving up and snapshotting the DOM anyway (default: `5000`).
 
 # Exposing Navigation Function
+
+In order to load pages quickly, our Single-Page Application shouldn't be reloaded for every navigation. Instead, the app should use its internal (functional) navigation, like it does for a real user.
+
+We only need to expose a global navigation function called `navigateTo` and Renderprime will do the rest for us.
+
+This is an example using React 18:
+
+_**hooks/useTransitionNavigate.ts**_
+
+```js
+import { useTransition } from 'react'
+import { useNavigate, To, NavigateOptions } from 'react-router-dom'
+
+const useTransitionNavigate = () => {
+  const [, startTransition] = useTransition()
+  const navigate = useNavigate()
+
+  return (to: To, options?: NavigateOptions) => startTransition(() => navigate(to, options))
+}
+
+export default useTransitionNavigate
+```
+
+_**hooks/useExposeNavigationFunction.ts**_
+
+```js
+import useTransitionNavigate from 'hooks/useTransitionNavigate'
+
+const useExposeNavigationFunction = () => {
+  const navigate = useTransitionNavigate()
+
+  window['navigateTo'] = (url: string) => navigate(url.replace(window.location.origin, ''), { replace: true })
+}
+
+export default useExposeNavigationFunction
+```
+
+_**App.tsx**_
+
+```js
+import useExposeNavigationFunction from 'hooks/useExposeNavigationFunction'
+
+const App: FC<{}> = () => {
+  useExposeNavigationFunction()
+
+  return (
+    ...
+  )
+}
+
+export default App
+```
+
+It is important to use transitioning since it is the most accurate indication that a navigation has finished.
 
 # Deploying
 
