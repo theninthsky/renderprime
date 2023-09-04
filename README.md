@@ -29,37 +29,37 @@ You only have to make sure that your app has no memory leaks and that memory doe
 
 # Exposing Navigation Function
 
-In order to load pages quickly, our Single-Page Application shouldn't be reloaded for every navigation. Instead, the app should use its internal (functional) navigation, like it does for a real user.
+In order to load pages quickly, our Single-Page Application shouldn't be reloaded upon each page request. Instead, the app should use its internal (functional) navigation, like it does for a real user.
 
-We only need to expose a global navigation function called `navigateTo` and Renderprime will do the rest for us.
+We only need to expose a global navigation function called `navigateTo` and dispatch the `navigationend` event when a navigation finishes. Renderprime will do the rest for us.
 
-This is an example using React 18:
-
-_**hooks/useTransitionNavigate.ts**_
-
-```js
-import { useTransition } from 'react'
-import { useNavigate, To, NavigateOptions } from 'react-router-dom'
-
-const useTransitionNavigate = () => {
-  const [, startTransition] = useTransition()
-  const navigate = useNavigate()
-
-  return (to: To, options?: NavigateOptions) => startTransition(() => navigate(to, options))
-}
-
-export default useTransitionNavigate
-```
+This is the React 18 implementation:
 
 _**hooks/useExposeNavigationFunction.ts**_
 
 ```js
-import useTransitionNavigate from 'hooks/useTransitionNavigate'
+import { useTransition, useRef, useEffect } from 'react'
+import { useNavigate, To, NavigateOptions } from 'react-router-dom'
 
 const useExposeNavigationFunction = () => {
-  const navigate = useTransitionNavigate()
+  const [pending, startTransition] = useTransition()
 
-  window['navigateTo'] = (url: string) => navigate(url.replace(window.location.origin, ''), { replace: true })
+  const navigate = useNavigate()
+
+  const navigating = useRef(false)
+
+  useEffect(() => {
+    if (pending) navigating.current = true
+    else if (navigating.current) {
+      navigating.current = false
+
+      window.dispatchEvent(new Event('navigationend'))
+    }
+  }, [pending])
+
+  const transitionNavigate = (to: To, options?: NavigateOptions) => startTransition(() => navigate(to, options))
+
+  window['navigateTo'] = (url: string) => transitionNavigate(url.replace(window.location.origin, ''), { replace: true })
 }
 
 export default useExposeNavigationFunction
@@ -81,7 +81,9 @@ const App: FC<{}> = () => {
 export default App
 ```
 
-It is important to use transitioning since it is the most accurate indication that a navigation has finished.
+It is important to use transitioning since this is the most accurate indication that a navigation has finished.
+
+_Note that if you cannot utilize transitioning in your setup, you should look for other ways to tell when navigations end._
 
 # Deploying
 

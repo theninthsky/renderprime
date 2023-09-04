@@ -16,7 +16,7 @@ const {
   RATE_LIMIT = CPUS * 20,
   USER_AGENT = 'Prerender',
   WEBSITE_URL,
-  WAIT_AFTER_LAST_REQUEST = 200,
+  WAIT_AFTER_LAST_REQUEST = 100,
   WAIT_AFTER_LAST_REQUEST_TIMEOUT = 5000
 } = process.env
 
@@ -107,9 +107,16 @@ const renderPage = async websiteUrl => {
 
   let html
 
-  await Promise.all([page.waitForNavigation(), page.evaluate(url => window.navigateTo(url), websiteUrl)])
-
   try {
+    await page.evaluate(
+      ({ url, eventName }) => {
+        return new Promise(resolve => {
+          window.addEventListener(eventName, resolve)
+          window.navigateTo(url)
+        })
+      },
+      { url: websiteUrl, eventName: 'navigationend' }
+    )
     await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST, timeout: +WAIT_AFTER_LAST_REQUEST_TIMEOUT })
 
     html = await page.evaluate(() => document.documentElement.outerHTML)
