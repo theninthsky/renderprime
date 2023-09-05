@@ -7,8 +7,7 @@ It leaverages caching and uses functional navigations to achieve unmatched perfo
 You only have to make sure that your app has no memory leaks and that memory doesn't build up through page navigations.
 
 - [Environment Variables](#environment-variables)
-- [Exposing Navigation Function](#exposing-navigation-function)
-- [Deploying](#deploying)
+- [Exposing The Navigation Function](#exposing-the-navigation-function)
 - [Benchmarks](#benchmarks)
 
 # Environment Variables
@@ -27,7 +26,7 @@ You only have to make sure that your app has no memory leaks and that memory doe
 
 `WAIT_AFTER_LAST_REQUEST_TIMEOUT`: For how many milliseconds should the browser wait for the last request to return before giving up and snapshotting the DOM anyway (default: `5000`).
 
-# Exposing Navigation Function
+# Exposing The Navigation Function
 
 In order to load pages quickly, our Single-Page Application shouldn't be reloaded upon each page request. Instead, the app should use its internal (functional) navigation, like it does for a real user.
 
@@ -85,6 +84,12 @@ It is important to use transitioning since this is the most accurate indication 
 
 _Note that if you cannot utilize transitioning in your setup, you should look for other ways to tell when navigations end._
 
-# Deploying
-
 # Benchmarks
+
+Here are the benchmarks of Renderprime deployed on _[Render](https://render.com)_ while rendering random Pokemon pages from my _[Client-side Rendering](https://client-side-rendering.pages.dev/pokemon)_ app.
+<br>
+Values indicate the time it took for the last request to return.
+
+- Free (**20** concurrent requests, **1** tab): **16.3** seconds.
+- Starter (**100** concurrent requests, **5** tabs): **18.5** seconds.
+- Standard (**300** concurrent requests, **15* tabs): **15.8** seconds.
