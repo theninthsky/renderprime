@@ -87,9 +87,13 @@ _Note that if you cannot utilize transitioning in your setup, you should look fo
 # Benchmarks
 
 Here are the benchmarks of Renderprime deployed on _[Render](https://render.com)_ while rendering random Pokemon pages from my _[Client-side Rendering](https://client-side-rendering.pages.dev/pokemon)_ app.
-<br>
-Values indicate the time it took for the last request to return.
 
-- Free (**20** concurrent requests, **1** tab): **16.3** seconds.
-- Starter (**100** concurrent requests, **5** tabs): **18.5** seconds.
-- Standard (**300** concurrent requests, **15* tabs): **15.8** seconds.
+![Render Pricing](images/render-pricing.png)
+
+Each test opens 1 tab per CPU core (except when the amount on RAM is the bottleneck).
+<br>
+Values indicate the average time it took for the last request to return when requesting **100 pages concurrently**.
+
+- Free (**1** tab): **89.9** seconds.
+- Starter (**5** tabs): **14.33** seconds.
+- Standard (**15** tabs): **6.54** seconds.
