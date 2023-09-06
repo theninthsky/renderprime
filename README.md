@@ -94,6 +94,10 @@ Each test opens 1 tab per CPU core (except when the amount on RAM is the bottlen
 <br>
 Values indicate the average time it took for the last request to return when requesting **100 pages concurrently**.
 
-- Free (**1** tab): **89.9** seconds.
-- Starter (**5** tabs): **14.33** seconds.
-- Standard (**15** tabs): **6.54** seconds.
+| Instance Type      | Seconds |
+| ------------------ | ------- |
+| Free (1 tab)       | 82.1    |
+| Starter (5 tabs)   | 14.33   |
+| Standard (15 tabs) | 6.54    |
+
+
