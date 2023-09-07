@@ -22,7 +22,7 @@ You only have to make sure that your app has no memory leaks and that memory doe
 
 `WEBSITE_URL`: The website to render. Will be loaded to immediately in order to fetch and cache all assets.
 
-`WAIT_AFTER_LAST_REQUEST`: The number of milliseconds to wait after the last request before snapshotting the DOM. This has tight correlation to the CPU power (default: `100`).
+`WAIT_AFTER_LAST_REQUEST`: The number of milliseconds to wait after the last request before snapshotting the DOM. This has tight correlation to the CPU power (default: `200`).
 
 `WAIT_AFTER_LAST_REQUEST_TIMEOUT`: For how many milliseconds should the browser wait for the last request to return before giving up and snapshotting the DOM anyway (default: `5000`).
 
@@ -99,3 +99,5 @@ Values indicate the average time it took for the last request to return when req
 | Free (1 tab)       | 82.1    |
 | Starter (5 tabs)   | 14.33   |
 | Standard (15 tabs) | 6.54    |
+
+From the above results, considering the pricing, it's clear that the best option is to run multiple _Starter_ instances and load-balance between them.
