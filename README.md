@@ -1,6 +1,6 @@
 <h1 align="center">Renderprime</h1>
 
-This project aims to create the fastest prerender server possible.
+This project aims to be the fastest prerender server possible.
 <br>
 It leaverages caching and uses functional navigations to achieve unmatched performance, far exceeding tools like _[Prerender](https://github.com/prerender/prerender)_ and _[Rendertron](https://github.com/GoogleChrome/rendertron)_.
 
@@ -99,5 +99,3 @@ Values indicate the average time it took for the last request to return when req
 | Free (1 tab)       | 82.1    |
 | Starter (5 tabs)   | 14.33   |
 | Standard (15 tabs) | 6.54    |
-
-
