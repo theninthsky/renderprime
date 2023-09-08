@@ -8,6 +8,7 @@ You only have to make sure that your app has no memory leaks and that memory doe
 
 - [Environment Variables](#environment-variables)
 - [Exposing The Navigation Function](#exposing-the-navigation-function)
+- [Reloading on Update](#reloading-on-update)
 - [Benchmarks](#benchmarks)
 
 # Environment Variables
@@ -83,6 +84,16 @@ export default App
 It is important to use transitioning since this is the most accurate indication that a navigation has finished.
 
 _Note that if you cannot utilize transitioning in your setup, you should look for other ways to tell when navigations end._
+
+# Reloading on Update
+
+Since Renderprime doesn't reload pages, our app won't be updated as long as the server runs.
+
+To overcome this, Renderprime has a `/reload` endpoint that, when called, reloads all pages.
+<br>
+By doing so, new assets will be downloaded and our pages will be prerendered in the app's latest version.
+
+It is recommended to add an HTTP call to this endpoint at the end of the CI/CD pipeline.
 
 # Benchmarks
 
