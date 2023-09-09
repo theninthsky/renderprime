@@ -12,10 +12,12 @@
     "node": ">=16.3.0"
   },
   "type": "module",
-  "main": "src/index.js",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "function": "node src/function.js",
+    "function:dev": "nodemon src/function.js"
   },
   "dependencies": {
     "p-queue": "^7.3.4",
