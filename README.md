@@ -6,6 +6,8 @@ It leaverages caching and uses functional navigations to achieve unmatched perfo
 
 You only have to make sure that your app has no memory leaks and that memory doesn't build up through page navigations.
 
+The serverless version should be used when aiming for large scales (it also has no special requirements): https://github.com/theninthsky/renderprime/tree/serverless
+
 - [Environment Variables](#environment-variables)
 - [Exposing The Navigation Function](#exposing-the-navigation-function)
 - [Reloading on Update](#reloading-on-update)
