@@ -12,16 +12,11 @@
     "node": ">=16.3.0"
   },
   "type": "module",
-  "main": "src/index.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "start": "node index.js"
   },
   "dependencies": {
-    "p-queue": "^7.3.4",
-    "puppeteer": "^21.1.0"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
+    "puppeteer": "^21.1.1"
   }
 }
