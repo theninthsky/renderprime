@@ -17,7 +17,7 @@ functions.http('render', async (req, res) => {
     return res.end()
   }
 
-  const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] })
+  const browser = await puppeteer.launch({ args: ['--no-sandbox'] })
   const [page] = await browser.pages()
 
   await page.setUserAgent(USER_AGENT)
