@@ -8,6 +8,8 @@ import removePreloads from './utils/removePreloads.js'
 
 const { USER_AGENT = 'Prerender', WAIT_AFTER_LAST_REQUEST = 200, WAIT_AFTER_LAST_REQUEST_TIMEOUT = 5000 } = process.env
 
+const browser = await puppeteer.launch({ args: ['--no-sandbox'] })
+
 functions.http('render', async (req, res) => {
   const { query } = url.parse(req.url, true)
   const websiteUrl = query.url
@@ -17,7 +19,6 @@ functions.http('render', async (req, res) => {
     return res.end()
   }
 
-  const browser = await puppeteer.launch({ args: ['--no-sandbox'] })
   const [page] = await browser.pages()
 
   await page.setUserAgent(USER_AGENT)
