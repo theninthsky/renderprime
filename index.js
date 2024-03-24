@@ -39,7 +39,7 @@ functions.http('render', async (req, res) => {
   let html
 
   try {
-    await page.goto(websiteUrl)
+    page.goto(websiteUrl)
     await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST, timeout: +WAIT_AFTER_LAST_REQUEST_TIMEOUT })
 
     html = await page.evaluate(() => document.documentElement.outerHTML)
