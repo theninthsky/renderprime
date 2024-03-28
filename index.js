@@ -7,7 +7,7 @@ import resourcesToBlock from './utils/resourcesToBlock.js'
 import removeScriptTags from './utils/removeScriptTags.js'
 import removePreloads from './utils/removePreloads.js'
 
-const { USER_AGENT = 'Prerender', WAIT_AFTER_LAST_REQUEST = 100, WAIT_AFTER_LAST_REQUEST_TIMEOUT = 3000 } = process.env
+const { USER_AGENT = 'Prerender', WAIT_AFTER_LAST_REQUEST = 100, WAIT_AFTER_LAST_REQUEST_TIMEOUT = 5000 } = process.env
 
 const queue = new PQueue({ concurrency: 1 })
 const browser = await puppeteer.launch({ args: ['--no-sandbox'] })
@@ -45,21 +45,20 @@ functions.http('render', async (req, res) => {
 
     console.log(`Request sent for ${websiteUrl}`)
   } else {
-    res.writeHead(500)
+    res.writeHead(429)
     res.end()
   }
 })
 
 const renderPage = async websiteUrl => {
-  page.goto(websiteUrl)
-
   try {
+    await page.goto(websiteUrl)
     await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST, timeout: +WAIT_AFTER_LAST_REQUEST_TIMEOUT })
   } catch (err) {
     console.error(err.message)
   }
 
-  let html = await page.evaluate(() => document.documentElement.outerHTML)
+  let html = await page.content()
   html = removeScriptTags(html)
   html = removePreloads(html)
 
