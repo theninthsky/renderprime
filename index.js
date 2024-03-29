@@ -3,11 +3,12 @@ import PQueue from 'p-queue'
 import puppeteer from 'puppeteer'
 import functions from '@google-cloud/functions-framework'
 
-import resourcesToBlock from './utils/resourcesToBlock.js'
 import removeScriptTags from './utils/removeScriptTags.js'
 import removePreloads from './utils/removePreloads.js'
 
 const { USER_AGENT = 'Prerender', WAIT_AFTER_LAST_REQUEST = 100, WAIT_AFTER_LAST_REQUEST_TIMEOUT = 5000 } = process.env
+const allowlist = ['document', 'script', 'xhr', 'fetch', 'other']
+const blockList = ['.ico']
 
 const queue = new PQueue({ concurrency: 1 })
 const browser = await puppeteer.launch({ args: ['--no-sandbox'] })
@@ -17,13 +18,13 @@ await page.setUserAgent(USER_AGENT)
 await page.setViewport({ width: 1440, height: 768 })
 await page.setRequestInterception(true)
 
-page.on('request', interceptedRequest => {
-  if (interceptedRequest.isInterceptResolutionHandled()) return
-  if (resourcesToBlock.some(resource => interceptedRequest.url().endsWith(resource))) {
-    return interceptedRequest.abort()
+page.on('request', request => {
+  if (request.isInterceptResolutionHandled()) return
+  if (!allowlist.includes(request.resourceType()) || blockList.some(resource => request.url().endsWith(resource))) {
+    return request.abort()
   }
 
-  interceptedRequest.continue()
+  request.continue()
 })
 
 functions.http('render', async (req, res) => {
