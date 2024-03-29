@@ -11,7 +11,7 @@ const allowlist = ['document', 'script', 'xhr', 'fetch', 'other']
 const blockList = ['.ico']
 
 const queue = new PQueue({ concurrency: 1 })
-const browser = await puppeteer.launch({ args: ['--no-sandbox'] })
+const browser = await puppeteer.launch({ args: ['--disable-gpu', '--no-first-run', '--no-sandbox'] })
 const [page] = await browser.pages()
 
 await page.setUserAgent(USER_AGENT)
