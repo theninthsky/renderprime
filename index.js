@@ -1,3 +1,4 @@
+import { availableParallelism } from 'node:os'
 import url from 'node:url'
 import PQueue from 'p-queue'
 import puppeteer from 'puppeteer'
@@ -8,10 +9,10 @@ import removePreloads from './utils/removePreloads.js'
 
 const { USER_AGENT = 'Prerender', WAIT_AFTER_LAST_REQUEST = 200, WAIT_AFTER_LAST_REQUEST_TIMEOUT = 5000 } = process.env
 const allowlist = ['document', 'script', 'xhr', 'fetch', 'other']
-const fileExtBlockList = ['.ico']
+const extensionBlockList = ['.ico']
 const urlBlockList = ['google-analytics']
 
-const queue = new PQueue({ concurrency: 1 })
+const queue = new PQueue({ concurrency: availableParallelism() })
 const browser = await puppeteer.launch({ args: ['--disable-gpu', '--no-first-run', '--no-sandbox'] })
 
 const initializePage = async () => {
@@ -25,7 +26,7 @@ const initializePage = async () => {
     if (request.isInterceptResolutionHandled()) return
     if (
       !allowlist.includes(request.resourceType()) ||
-      fileExtBlockList.some(ext => request.url().endsWith(ext)) ||
+      extensionBlockList.some(ext => request.url().endsWith(ext)) ||
       urlBlockList.some(url => request.url().includes(url))
     ) {
       return request.abort()
