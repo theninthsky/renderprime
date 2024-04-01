@@ -27,6 +27,21 @@ page.on('request', request => {
   request.continue()
 })
 
+const renderPage = async websiteUrl => {
+  try {
+    await page.goto(websiteUrl)
+    await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST, timeout: +WAIT_AFTER_LAST_REQUEST_TIMEOUT })
+  } catch (err) {
+    console.error(err.message)
+  }
+
+  let html = await page.content()
+  html = removeScriptTags(html)
+  html = removePreloads(html)
+
+  return html
+}
+
 functions.http('render', async (req, res) => {
   const { query } = url.parse(req.url, true)
   const websiteUrl = query.url
@@ -50,18 +65,3 @@ functions.http('render', async (req, res) => {
     res.end()
   }
 })
-
-const renderPage = async websiteUrl => {
-  try {
-    await page.goto(websiteUrl)
-    await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST, timeout: +WAIT_AFTER_LAST_REQUEST_TIMEOUT })
-  } catch (err) {
-    console.error(err.message)
-  }
-
-  let html = await page.content()
-  html = removeScriptTags(html)
-  html = removePreloads(html)
-
-  return html
-}
