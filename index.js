@@ -6,28 +6,40 @@ import functions from '@google-cloud/functions-framework'
 import removeScriptTags from './utils/removeScriptTags.js'
 import removePreloads from './utils/removePreloads.js'
 
-const { USER_AGENT = 'Prerender', WAIT_AFTER_LAST_REQUEST = 200, WAIT_AFTER_LAST_REQUEST_TIMEOUT = 5000 } = process.env
+const { USER_AGENT = 'Prerender', WAIT_AFTER_LAST_REQUEST = 100, WAIT_AFTER_LAST_REQUEST_TIMEOUT = 5000 } = process.env
 const allowlist = ['document', 'script', 'xhr', 'fetch', 'other']
-const blockList = ['.ico']
+const fileExtBlockList = ['.ico']
+const urlBlockList = ['google-analytics']
 
 const queue = new PQueue({ concurrency: 1 })
 const browser = await puppeteer.launch({ args: ['--disable-gpu', '--no-first-run', '--no-sandbox'] })
-const [page] = await browser.pages()
 
-await page.setUserAgent(USER_AGENT)
-await page.setViewport({ width: 1440, height: 768 })
-await page.setRequestInterception(true)
+const initializePage = async () => {
+  const page = await browser.newPage()
 
-page.on('request', request => {
-  if (request.isInterceptResolutionHandled()) return
-  if (!allowlist.includes(request.resourceType()) || blockList.some(resource => request.url().endsWith(resource))) {
-    return request.abort()
-  }
+  await page.setUserAgent(USER_AGENT)
+  await page.setViewport({ width: 1440, height: 768 })
+  await page.setRequestInterception(true)
 
-  request.continue()
-})
+  page.on('request', request => {
+    if (request.isInterceptResolutionHandled()) return
+    if (
+      !allowlist.includes(request.resourceType()) ||
+      fileExtBlockList.some(ext => request.url().endsWith(ext)) ||
+      urlBlockList.some(url => request.url().includes(url))
+    ) {
+      return request.abort()
+    }
+
+    request.continue()
+  })
+
+  return page
+}
 
 const renderPage = async websiteUrl => {
+  const page = await initializePage()
+
   try {
     await page.goto(websiteUrl)
     await page.waitForNetworkIdle({ idleTime: +WAIT_AFTER_LAST_REQUEST, timeout: +WAIT_AFTER_LAST_REQUEST_TIMEOUT })
@@ -38,6 +50,8 @@ const renderPage = async websiteUrl => {
   let html = await page.content()
   html = removeScriptTags(html)
   html = removePreloads(html)
+
+  page.close()
 
   return html
 }
