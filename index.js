@@ -6,7 +6,7 @@ import functions from '@google-cloud/functions-framework'
 import removeScriptTags from './utils/removeScriptTags.js'
 import removePreloads from './utils/removePreloads.js'
 
-const { USER_AGENT = 'Prerender', WAIT_AFTER_LAST_REQUEST = 100, WAIT_AFTER_LAST_REQUEST_TIMEOUT = 5000 } = process.env
+const { USER_AGENT = 'Prerender', WAIT_AFTER_LAST_REQUEST = 200, WAIT_AFTER_LAST_REQUEST_TIMEOUT = 5000 } = process.env
 const allowlist = ['document', 'script', 'xhr', 'fetch', 'other']
 const fileExtBlockList = ['.ico']
 const urlBlockList = ['google-analytics']
