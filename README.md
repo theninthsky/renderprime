@@ -1,6 +1,8 @@
 <h1 align="center">Renderprime</h1>
 
-A fast and serverless prerenderer built as a GCP _[Cloud Function](https://cloud.google.com/functions?hl=en)_.
+A high performance and serverless prerenderer built as a GCP _[Cloud Function](https://cloud.google.com/functions)_.
+
+The server version can be found here: https://github.com/theninthsky/renderprime/tree/server
 
 # Environment Variables
 
@@ -13,5 +15,5 @@ A fast and serverless prerenderer built as a GCP _[Cloud Function](https://cloud
 # Recommended Function Setup
 
 `Memory allocated`: 1GB
-`CPU`: 1
-`Maximum concurrent requests per instance`: 1
+`CPU`: 2
+`Maximum concurrent requests per instance`: 5
