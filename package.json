@@ -1,7 +1,7 @@
 {
   "name": "renderprime",
   "version": "1.0.0",
-  "description": "Performance-oriented prerender server.",
+  "description": "Performance-oriented prerenderer.",
   "keywords": [
     "prerender"
   ],
@@ -12,7 +12,7 @@
     "node": ">=20.0.0"
   },
   "type": "module",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "start": "functions-framework --target=render"
   },
