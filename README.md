@@ -2,8 +2,6 @@
 
 A high performance and serverless prerenderer built as a GCP _[Cloud Function](https://cloud.google.com/functions)_.
 
-The server version can be found here: https://github.com/theninthsky/renderprime/tree/server
-
 # Environment Variables
 
 `USER_AGENT`: The `navigator.userAgent` string that will be injected to the browser during rendering (default: `Prerender`).
@@ -12,8 +10,10 @@ The server version can be found here: https://github.com/theninthsky/renderprime
 
 `WAIT_AFTER_LAST_REQUEST_TIMEOUT`: For how many milliseconds should the browser wait for the last request to return before giving up and snapshotting the DOM anyway (default: `5000`).
 
-# Recommended Function Setup
+# Recommended Cloud Function Setup
 
 `Memory allocated`: 1GB
+<br>
 `CPU`: 2
+<br>
 `Maximum concurrent requests per instance`: 5
