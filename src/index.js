@@ -13,7 +13,9 @@ const extensionBlockList = ['.ico']
 const urlBlockList = ['google-analytics']
 
 const queue = new PQueue({ concurrency: availableParallelism() })
-const browser = await puppeteer.launch({ args: ['--disable-gpu', '--no-first-run', '--no-sandbox'] })
+const browser = await puppeteer.launch({ args: ['--disable-gpu', '--no-sandbox'] })
+
+console.log(`Concurrency: ${availableParallelism()}`)
 
 const initializePage = async () => {
   const page = await browser.newPage()
