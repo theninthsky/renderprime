@@ -27,6 +27,8 @@ const documentResponse = document ? { ...document, body: await document.text() }
 
 console.log(`Concurrency: ${availableParallelism()}`)
 
+if (document) console.log(`Cached HTML document for ${WEBSITE_URL}`)
+
 const initializePage = async () => {
   const page = await browser.newPage()
 
