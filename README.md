@@ -4,6 +4,8 @@ A high performance and serverless prerenderer built as a GCP _[Cloud Function](h
 
 # Environment Variables
 
+`WEBSITE_URL`: The URL of the website without `/` at the end. Providing it will cause the HTML document to be cached, thus greatly reducing response times (default: `undefined`).
+
 `USER_AGENT`: The `navigator.userAgent` string that will be injected to the browser during rendering (default: `Prerender`).
 
 `WAIT_AFTER_LAST_REQUEST`: The number of milliseconds to wait after the last request before snapshotting the DOM. This has tight correlation to the CPU power (default: `200`).

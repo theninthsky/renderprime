@@ -7,13 +7,23 @@ import functions from '@google-cloud/functions-framework'
 import removeScriptTags from './utils/removeScriptTags.js'
 import removePreloads from './utils/removePreloads.js'
 
-const { USER_AGENT = 'Prerender', WAIT_AFTER_LAST_REQUEST = 200, WAIT_AFTER_LAST_REQUEST_TIMEOUT = 5000 } = process.env
+const {
+  WEBSITE_URL,
+  USER_AGENT = 'Prerender',
+  WAIT_AFTER_LAST_REQUEST = 200,
+  WAIT_AFTER_LAST_REQUEST_TIMEOUT = 5000
+} = process.env
+
 const allowlist = ['document', 'script', 'xhr', 'fetch', 'other']
 const extensionBlockList = ['.ico']
 const urlBlockList = ['google-analytics']
 
 const queue = new PQueue({ concurrency: availableParallelism() })
-const browser = await puppeteer.launch({ headless: 'shell', args: ['--disable-gpu', '--no-sandbox'] })
+const browserPromise = puppeteer.launch({ headless: 'shell', args: ['--disable-gpu', '--no-sandbox'] })
+const documentPromise = WEBSITE_URL ? fetch(WEBSITE_URL) : undefined
+
+const [browser, document] = await Promise.all([browserPromise, documentPromise])
+const documentResponse = document ? { ...document, body: await document.text() } : undefined
 
 console.log(`Concurrency: ${availableParallelism()}`)
 
@@ -26,6 +36,9 @@ const initializePage = async () => {
 
   page.on('request', request => {
     if (request.isInterceptResolutionHandled()) return
+    if (request.resourceType() === 'document' && new URL(request.url()).origin === WEBSITE_URL) {
+      return request.respond(documentResponse)
+    }
     if (
       !allowlist.includes(request.resourceType()) ||
       extensionBlockList.some(ext => request.url().endsWith(ext)) ||
