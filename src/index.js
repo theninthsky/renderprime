@@ -4,8 +4,9 @@ import PQueue from 'p-queue'
 import puppeteer from 'puppeteer'
 import functions from '@google-cloud/functions-framework'
 
-import removeScriptTags from './utils/removeScriptTags.js'
-import removePreloads from './utils/removePreloads.js'
+import { extensionBlockList, urlBlockList } from './block-lists.js'
+import removeScriptTags from './utils/remove-script-tags.js'
+import removePreloads from './utils/remove-preloads.js'
 
 const {
   WEBSITE_URL,
@@ -15,8 +16,6 @@ const {
 } = process.env
 
 const allowlist = ['document', 'script', 'xhr', 'fetch', 'other']
-const extensionBlockList = ['.ico']
-const urlBlockList = ['google-analytics']
 
 const queue = new PQueue({ concurrency: availableParallelism() })
 const browserPromise = puppeteer.launch({ headless: 'shell', args: ['--disable-gpu', '--no-sandbox'] })
