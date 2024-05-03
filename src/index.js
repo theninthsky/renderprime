@@ -24,6 +24,8 @@ const documentPromise = WEBSITE_URL ? fetch(WEBSITE_URL) : undefined
 const [browser, document] = await Promise.all([browserPromise, documentPromise])
 const documentResponse = document ? { ...document, body: await document.text() } : undefined
 
+const pages = await browser.pages()
+
 console.log(`Concurrency: ${availableParallelism()}`)
 
 if (document) console.log(`Cached HTML document for ${WEBSITE_URL}`)
@@ -51,11 +53,18 @@ const initializePage = async () => {
     request.continue()
   })
 
+  pages.push(page)
+
   return page
 }
 
+const getAvailablePage = () => pages.find(({ processing }) => !processing)
+
 const renderPage = async websiteUrl => {
-  const page = await initializePage()
+  const page = getAvailablePage() || (await initializePage())
+  page.processing = true
+
+  const startTime = new Date()
 
   try {
     await page.goto(websiteUrl)
@@ -64,11 +73,13 @@ const renderPage = async websiteUrl => {
     console.error(err.message)
   }
 
+  console.log(`${websiteUrl} rendered in ${new Date() - startTime}ms`)
+
   let html = await page.content()
   html = removeScriptTags(html)
   html = removePreloads(html)
 
-  page.close()
+  page.processing = false
 
   return html
 }

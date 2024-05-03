@@ -26,4 +26,4 @@ These will allow you to block resources by file extension and URL respectively.
 <br>
 `CPU`: 2
 <br>
-`Maximum concurrent requests per instance`: 5
+`Maximum concurrent requests per instance`: 4 (should match `availableParallelism`)
