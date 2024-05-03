@@ -4,7 +4,7 @@ import PQueue from 'p-queue'
 import puppeteer from 'puppeteer'
 import functions from '@google-cloud/functions-framework'
 
-import { extensionBlockList, urlBlockList } from './block-lists.js'
+import { extensionBlocklist, urlBlocklist } from './blocklists.js'
 import removeScriptTags from './utils/remove-script-tags.js'
 import removePreloads from './utils/remove-preloads.js'
 
@@ -44,8 +44,8 @@ const initializePage = async () => {
     }
     if (
       !allowlist.includes(request.resourceType()) ||
-      extensionBlockList.some(ext => request.url().endsWith(ext)) ||
-      urlBlockList.some(url => request.url().includes(url))
+      extensionBlocklist.some(ext => request.url().endsWith(ext)) ||
+      urlBlocklist.some(url => request.url().includes(url))
     ) {
       return request.abort()
     }
