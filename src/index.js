@@ -24,15 +24,23 @@ const documentPromise = WEBSITE_URL ? fetch(WEBSITE_URL) : undefined
 const [browser, document] = await Promise.all([browserPromise, documentPromise])
 const documentResponse = document ? { ...document, body: await document.text() } : undefined
 
-const pages = await browser.pages()
-
 console.log(`Concurrency: ${availableParallelism()}`)
-
+console.log('Chrome is running')
 if (document) console.log(`Cached HTML document for ${WEBSITE_URL}`)
 
-const initializePage = async () => {
+const pages = await browser.pages()
+
+const openPage = async () => {
   const page = await browser.newPage()
 
+  await initializePage(page)
+
+  pages.push(page)
+
+  return page
+}
+
+const initializePage = async page => {
   await page.setUserAgent(USER_AGENT)
   await page.setViewport({ width: 1440, height: 768 })
   await page.setRequestInterception(true)
@@ -52,16 +60,12 @@ const initializePage = async () => {
 
     request.continue()
   })
-
-  pages.push(page)
-
-  return page
 }
 
 const getAvailablePage = () => pages.find(({ processing }) => !processing)
 
 const renderPage = async websiteUrl => {
-  const page = getAvailablePage() || (await initializePage())
+  const page = getAvailablePage() || (await openPage())
   page.processing = true
 
   const startTime = new Date()
@@ -83,6 +87,8 @@ const renderPage = async websiteUrl => {
 
   return html
 }
+
+await initializePage(pages[0])
 
 functions.http('render', async (req, res) => {
   const { query } = url.parse(req.url, true)
