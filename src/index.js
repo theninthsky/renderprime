@@ -20,19 +20,30 @@ const allowlist = ['document', 'script', 'xhr', 'fetch', 'other']
 const queue = new PQueue({ concurrency: availableParallelism() })
 const browserPromise = puppeteer.launch({ headless: 'shell', args: ['--disable-gpu', '--no-sandbox'] })
 const documentPromise = WEBSITE_URL ? fetch(WEBSITE_URL) : undefined
-
 const [browser, document] = await Promise.all([browserPromise, documentPromise])
-const documentResponse = document ? { ...document, body: await document.text() } : undefined
+
+let documentResponse
 
 console.log(`Concurrency: ${availableParallelism()}`)
 console.log('Chrome is running')
-if (document) console.log(`Cached HTML document for ${WEBSITE_URL}`)
+
+if (WEBSITE_URL) {
+  documentResponse = { ...document, body: await document.text() }
+
+  console.log(`Cached HTML document for ${WEBSITE_URL}`)
+
+  setInterval(async () => {
+    const freshDocument = await fetch(WEBSITE_URL)
+    documentResponse = { ...freshDocument, body: await freshDocument.text() }
+
+    console.log(`Revalidated HTML document for ${WEBSITE_URL}`)
+  }, 10 * 60 * 1000)
+}
 
 const pages = await browser.pages()
 
 const openPage = async () => {
   const page = await browser.newPage()
-
   await initializePage(page)
 
   pages.push(page)
