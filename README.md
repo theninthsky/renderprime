@@ -4,7 +4,7 @@ A high performance and serverless prerenderer built as a GCP _[Cloud Function](h
 
 ## Features
 
-- Asset caching through the default browser caching behavior.
+- Full asset caching through the default browser caching behavior.
 - HTML document caching for instant app shell rendering. The document is revalidated every 10 minutes.
 - Render parallelization up to the value of `availableParallelism`.
 
