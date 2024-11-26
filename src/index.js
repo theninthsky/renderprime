@@ -17,9 +17,11 @@ const {
 
 const allowlist = ['document', 'script', 'xhr', 'fetch', 'other']
 
+const documentOptions = { headers: { 'X-Bypass': true } }
+
 const queue = new PQueue({ concurrency: availableParallelism() })
 const browserPromise = puppeteer.launch({ headless: 'shell', args: ['--disable-gpu', '--no-sandbox'] })
-const documentPromise = WEBSITE_URL ? fetch(WEBSITE_URL) : undefined
+const documentPromise = WEBSITE_URL ? fetch(WEBSITE_URL, documentOptions) : undefined
 const [browser, document] = await Promise.all([browserPromise, documentPromise])
 
 let documentResponse
@@ -33,7 +35,7 @@ if (WEBSITE_URL) {
   console.log(`Cached HTML document for ${WEBSITE_URL}`)
 
   setInterval(async () => {
-    const freshDocument = await fetch(WEBSITE_URL)
+    const freshDocument = await fetch(WEBSITE_URL, documentOptions)
     documentResponse = { ...freshDocument, body: await freshDocument.text() }
 
     console.log(`Revalidated HTML document for ${WEBSITE_URL}`)
