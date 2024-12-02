@@ -1,4 +1,4 @@
-<h1 align="center">Renderprime</h1>
+<h1 align="center">Renderless</h1>
 
 A high performance and serverless prerenderer built as a GCP _[Cloud Function](https://cloud.google.com/functions)_.
 
@@ -13,7 +13,7 @@ A high performance and serverless prerenderer built as a GCP _[Cloud Function](h
 ### Installation
 
 ```sh
-git clone https://github.com/theninthsky/renderprime.git
+git clone https://github.com/frontend-infra/renderless.git
 npm i
 ```
 
