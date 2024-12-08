@@ -17,7 +17,7 @@ const {
 
 const allowlist = ['document', 'script', 'xhr', 'fetch', 'other']
 
-const documentOptions = { headers: { 'X-Bypass': true } }
+const documentOptions = { headers: { 'User-Agent': 'Prerender' } }
 
 const queue = new PQueue({ concurrency: availableParallelism() })
 const browserPromise = puppeteer.launch({ headless: 'shell', args: ['--disable-gpu', '--no-sandbox'] })
